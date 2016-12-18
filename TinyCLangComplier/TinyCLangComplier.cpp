@@ -20,7 +20,13 @@ struct Token{
 
 }token[100];
 
-
+//定义函数
+int conditional_statement();
+int code_block();
+int program();
+int main_function();
+int entrance();
+int else_statement();
 
 int p;//token指针
 int now_number = 0;
@@ -30,7 +36,20 @@ void nextW(){
 	line = token[p].line;
 	p++;
 }
-
+int else_statement(){
+	return 1;
+}
+int conditional_statement(){
+	if (now_number == 37) {
+		program();
+		nextW();
+		if (now_number == 38) return 1;
+		else
+			return 1004;
+	}
+	else
+		return 1003;
+}
 int code_block(){
 	if (now_number == 34) return 1;//说明{}之间没有代码
 	else{
@@ -41,7 +60,13 @@ int code_block(){
 
 		}
 		else if (now_number == 9){  //if 说明是if语句
-
+			nextW();
+			int result=conditional_statement();
+			if (result > 1000) return result;
+			result=program();
+			if (result > 1000) return result;
+			result=else_statement();
+			if (result > 1000) return result;
 		}
 		else if (now_number == 12){  //while 循环语句
 
@@ -50,15 +75,19 @@ int code_block(){
 
 		}
 		else{   //未识别语句
+			cout << "1100";
 			return 1100;
 		}
+		code_block();
 	}
 	
 }
 int program(){
 	if (now_number == 33){
 		nextW();
-		code_block();
+		int result=code_block();
+		if (result > 1000) return result;
+		nextW();
 		if (now_number == 34) {
 			//cout << "right";
 			return 1;
@@ -115,7 +144,7 @@ int  main(){
 	token[1].token_number = 4;
 	token[1].line = 1; token[2].line = 1; token[3].line = 1; token[4].line = 1;
 	token[2].token_number = 7;
-	token[3].token_number = 37; token[4].token_number = 38; token[5].token_number = 33; token[6].token_number = 40;
+	token[3].token_number = 37; token[4].token_number = 38; token[5].token_number = 33; token[6].token_number = 9; token[7].token_number = 37; token[8].token_number = 34;
 	//if(entrance()==1000) cout<<"error:line"<<line<<" need stdio.h";
 	int result = entrance();
 	switch (result){
