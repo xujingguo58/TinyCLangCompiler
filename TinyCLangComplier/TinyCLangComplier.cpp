@@ -13,5 +13,5 @@ int _tmain(int argc, _TCHAR* argv[])
 
 using namespace std;
 int main(){
-	cout << "hello world!";
+	
 }
