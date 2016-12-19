@@ -30,7 +30,7 @@
     <ClInclude Include="resource.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="词法分析.h">
+    <ClInclude Include="token.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
