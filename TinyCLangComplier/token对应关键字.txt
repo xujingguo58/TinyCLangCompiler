@@ -28,6 +28,7 @@ KT¹Ø¼ü×Ö
 	continue 17
 	#include<stdio.h> 18 
 	return 19
+	
 PT½ç·û£º
 	= 20
 	> 21
@@ -56,3 +57,6 @@ PT½ç·û£º
 	: 44
 	' 45
 	" 46
+	
+	
+	
