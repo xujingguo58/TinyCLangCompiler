@@ -21,7 +21,8 @@ struct Token{
 }token[100];
 
 //定义函数
-int conditional_statement();
+int condition();  //条件
+int conditional_statement();  //条件语句
 int code_block();
 int program();
 int main_function();
@@ -36,12 +37,18 @@ void nextW(){
 	line = token[p].line;
 	p++;
 }
+
+int condition(){
+	
+}
 int else_statement(){
 	return 1;
 }
-int conditional_statement(){
+int conditional_statement(){   //条件语句
 	if (now_number == 37) {
-		program();
+		nextW();
+		int result=program();
+		if (result >= 1000) return result;
 		nextW();
 		if (now_number == 38) return 1;
 		else
@@ -63,10 +70,11 @@ int code_block(){
 			nextW();
 			int result=conditional_statement();
 			if (result > 1000) return result;
-			result=program();
+			else return 1;
+			/*result=program();
 			if (result > 1000) return result;
 			result=else_statement();
-			if (result > 1000) return result;
+			if (result > 1000) return result;*/
 		}
 		else if (now_number == 12){  //while 循环语句
 
@@ -144,7 +152,8 @@ int  main(){
 	token[1].token_number = 4;
 	token[1].line = 1; token[2].line = 1; token[3].line = 1; token[4].line = 1;
 	token[2].token_number = 7;
-	token[3].token_number = 37; token[4].token_number = 38; token[5].token_number = 33; token[6].token_number = 9; token[7].token_number = 37; token[8].token_number = 34;
+	token[3].token_number = 37; token[4].token_number = 38; token[5].token_number = 33; token[6].token_number = 9; 
+	token[7].token_number = 37; token[8].token_number = 38; token[9].token_number = 33; token[10].token_number = 34;
 	//if(entrance()==1000) cout<<"error:line"<<line<<" need stdio.h";
 	int result = entrance();
 	switch (result){
