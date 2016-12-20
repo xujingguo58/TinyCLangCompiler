@@ -171,7 +171,14 @@ void state_change(int state_before, int state_now, char temp_char){ //×Ô¶¯»ú
 					temp_string +=c;
 				break;
 			case 8:
-				temp_string += c;
+				if (state_now == 5){
+					token[p].token_name = c;
+					token[p].line = input_line;
+					temp_string = "";
+					p++;
+				}
+				else
+					temp_string += c;
 		}
 }
 int isIdentifier(string str){
