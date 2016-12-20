@@ -26,9 +26,10 @@ KT¹Ø¼ü×Ö
 	case 15
 	break 16
 	continue 17
-	#include<stdio.h> 18 
+	# 18 
 	return 19
-	
+	stdio.h  100
+	include  101
 PT½ç·û£º
 	= 20
 	> 21
