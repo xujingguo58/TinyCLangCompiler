@@ -22,11 +22,12 @@ int _tmain(int argc, _TCHAR* argv[])
 }token[100];*/
 
 //定义函数
-int relation_operator();
-int arithmetic_expression();
+int relation_operator();  //关系运算符
+int arithmetic_expression();//算数表达式
 int logic_expression();  //<逻辑表达式>
 int condition();  //<条件>
 int conditional_statement();  //条件语句
+int variable_declatation(); //<变量声明语句>
 int code_block();
 int program();
 int main_function();
@@ -36,17 +37,79 @@ int E();
 int F();
 int T();
 int assignment();  //<赋值>
-
+int char_constant();//<字符常量>
+int declaration_or_assign();//<声明或赋值>
+int if_assign(); //<是否赋值>
 //int p;//token指针
 int now_number = 0;
-int line = 0;
+int line = 1;
 void nextW(){
 	now_number = token[p].token_number;
 	line = token[p].line;
 	p++;
 }
+void lastW(){
+	p--;
+	now_number = token[p].token_number;
+	line = token[p].line;
+}
+int if_assign(){
+	nextW();
+	if (now_number == 20) {  //现在是"=",说明是在声明时直接赋值
+		int result = assignment();
+		if (result >= 1000) return result;
+		else
+			return 1;
+	}
+	else if (now_number == 43){  //空，不赋值
+		lastW();
+		return 1;
+	}
+	else return 1013; //need ';'
+}
+int declaration_or_assign(){
+	int result = if_assign();
+	if (result >= 1000) return result;
+	else
+		return 1;
+	
+}
+int variable_declatation(){     //变量声明
+	int result= declaration_or_assign();
+	if (result >= 1000) return result;
+loop_assign:
+	nextW();
+	if (now_number == 31){  //, 表示继续赋值
+		nextW();
+		result = declaration_or_assign();
+		if (result >= 1000) return result;
+		nextW();
+		if (now_number == 31) goto loop_assign;
+	}
+	else if (now_number == 43) return 1;
+	else
+		return 1013;  //need ';'
+}
 int assignment(){
-	return 1012;
+	if (now_number == 0 || now_number == 3){  //如果是常数或标识符，则为算数表达式
+		int result = arithmetic_expression();
+		if (result >= 1000) return result;
+		//nextW();
+		if (now_number == 43) return 1;
+		else
+			return 1013;
+	}
+	else if (now_number == 1){  //如果是字符，则为字符常量
+		nextW();
+		if (now_number == 43){
+			cout << "赋值语句正确" << endl;
+			return 1;
+		}
+		else
+			return 1013;  //need ';'
+	}
+	else
+		return 1200;  //表达式右值错误；
 }
 int relation_operator(){
 	if (now_number == 20 || now_number == 21 || now_number == 22 || now_number == 23 || now_number == 24 || now_number == 25)
@@ -55,13 +118,15 @@ int relation_operator(){
 		return 1007;//neeed operator
 }
 int F(){
-	if (now_number == 3){
+	int result;
+	if (now_number == 3||now_number==0){
 		nextW();
 	}
 	else{
 		if (now_number == 37){
 			nextW();
-			E();
+			result=E();
+			if (result >= 1000) return result;
 			if (now_number == 38) nextW();
 			else
 				return 1008;//need ')'
@@ -83,12 +148,13 @@ int T(){
 }
 int E(){
 	int result;
-	loop_T:result=T();
-	if (result >= 1000) return 1000;
+	result = T();
+	if (result >= 1000) return result;
+	loop_T:
 	if (now_number == 26 || now_number == 27){
 		nextW();
 		result=T();
-		if (result >= 1000) return 1000;
+		if (result >= 1000) return result;
 		goto loop_T;
 	}
 }
@@ -150,9 +216,6 @@ int conditional_statement(){   //条件语句
 		//int result=program();
 		if (result >= 1000) return result;
 		nextW();
-		/*if (now_number == 38) return 1;
-		else
-			return 1004;*/
 		result = program();
 		if (result >= 1000) return result;
 		result = else_statement();
@@ -164,7 +227,13 @@ int code_block(){
 	if (now_number == 34) return 1;//说明{}之间没有代码
 	else{
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
-
+			cout << "声明语句" << endl;
+			nextW();
+			int result = variable_declatation();
+			if (result >= 1000)
+				return 1;
+			else
+				return result;
 		}
 		else if (now_number == 0){  //标识符，说明是赋值语句
 			cout << "赋值语句";
@@ -182,14 +251,9 @@ int code_block(){
 			nextW();
 			int result=conditional_statement();
 			if (result > 1000) return result;
-			//else
-				//return 1;
-			/*result=program();
-			if (result > 1000) return result;
-			result=else_statement();
-			if (result > 1000) return result;*/
 		}
 		else if (now_number == 12){  //while 循环语句
+			cout << "while语句" << endl;
 			nextW();
 			int result = condition();
 			if (result >= 1000) return result;
@@ -216,7 +280,7 @@ int program(){
 		if (now_number == 34)  return 1;//现在为{}说明中间没有代码
 		int result=code_block();
 		if (result > 1000) return result;
-		nextW();
+		//nextW();
 		if (now_number == 34) {
 			//cout << "right";
 			return 1;
@@ -259,47 +323,66 @@ int entrance(){
 	if (now_number == 18)
 	{
 		nextW();
-		main_function();
+		if (now_number == 101){
+			nextW();
+			if (now_number == 22){
+				nextW();
+				if (now_number == 100){
+					nextW();
+					if (now_number == 21){
+						nextW();
+						main_function();
+					}
+					else
+						return 1000;
+				}
+				else
+					return 1000;
+			}
+			else
+				return 1000;
+		}
+		else
+			return 1000;
+
 	}
 	else{
-		return 1000;//need stdio.h
+		return 1000;//need ‘#’
 	}
 }
 
 
 int  main(){
-	/*token[0].token_number = 18;token[0].line = 0;
-	token[1].token_number = 4;
-	token[1].line = 1; token[2].line = 1; token[3].line = 1; token[4].line = 1;
-	token[2].token_number = 7;
-	token[3].token_number = 37; token[4].token_number = 38; token[5].token_number = 33; token[6].token_number = 9; 
-	token[7].token_number = 37; token[8].token_number = 3; token[9].token_number = 21; token[10].token_number = 3;
-	token[11].token_number = 38; token[12].token_number = 33; token[13].token_number = 34; //token[14].token_number = 34;
-	//while(i<5){i=i+1;}
-	token[14].token_number = 12; token[15].token_number = 37; token[16].token_number = 0; token[17].token_number = 22; token[18].token_number = 3; token[19].token_number = 38;
-	token[20].token_number = 33; token[21].token_number = 0; token[22].token_number = 20; token[23].token_number = 3; token[24].token_number = 0; token[25].token_number = 26;
-	token[26].token_number = 3; token[27].token_number = 43; token[28].token_number = 34; token[29].token_number = 34;*/
-	//if(entrance()==1000) cout<<"error:line"<<line<<" need stdio.h";
 
-	//p = 0;
-	scanf();
+	int result;
+	result=scanf();
+	if (result >= 2000)
+	{
+		cout << "error2200:line " << error_line << " 未能识别的字符";
+		return 0;
+	}
+
 	p = 0;
-	int result = entrance();
+	line = 1;
+	result = entrance();
 	switch (result){
-	case 1:cout << "compiler success"; break;
-	case 1000: cout << "error1000:line" << line << " need stdio.h"; break;
-	case 1001: cout << "error1001:line" << line << " main 需要类型"; break;
-	case 1002: cout << "error1002:line" << line << " need 'main'"; break;
-	case 1003: cout << "error1003:line" << line << " need '('"; break;
-	case 1004: cout << "error1004:line" << line << " need ')'"; break;
-	case 1005: cout << "error1005:line" << line << " need '{'"; break;
-	case 1006: cout << "error1006:line" << line << " need '}'"; break;
-	case 1007: cout << "error1007:line" << line << " need operator"; break;
-	case 1008: cout << "error1008:line" << line << " 算数表达式错误1"; break;
-	case 1009: cout << "error1009:line" << line << " 算数表达式错误2"; break;
-	case 1010: cout << "error1010:line" << line << " 左值类型错误"; break;
-	case 1011: cout << "error1011:line" << line << " 右值类型错误"; break;
-	case 1100: cout << "error1100:line" << line << " 未识别语句"; break;
-		
+		case 1:cout << "compiler success"; break;
+		case 1000: cout << "error1000:line " << line << " 头文件格式错误"; break;
+		case 1001: cout << "error1001:line " << line << " main 需要类型"; break;
+		case 1002: cout << "error1002:line " << line << " need 'main'"; break;
+		case 1003: cout << "error1003:line " << line << " need '('"; break;
+		case 1004: cout << "error1004:line " << line << " need ')'"; break;
+		case 1005: cout << "error1005:line " << line << " need '{'"; break;
+		case 1006: cout << "error1006:line " << line << " need '}'"; break;
+		case 1007: cout << "error1007:line " << line << " need operator"; break;
+		case 1008: cout << "error1008:line " << line << " 算数表达式错误1"; break;
+		case 1009: cout << "error1009:line " << line << " 算数表达式错误2"; break;
+		case 1010: cout << "error1010:line " << line << " 左值类型错误"; break;
+		case 1011: cout << "error1011:line " << line << " 右值类型错误"; break;
+		case 1012: cout << "error1012:line " << line << " need '='"; break;
+		case 1013: cout << "error1013:line " << line << " need ';'"; break;
+		case 1200: cout << "error1200:line " << line << " 表达式右值错误"; break;
+		case 1100: cout << "error1100:line " << line << " 未识别语句"; break;
+		default: cout << result << endl;
 	}
 }

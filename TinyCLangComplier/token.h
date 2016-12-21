@@ -14,6 +14,7 @@ struct Token{
 int p = 0;//指针
 int input_line;//行数
 
+int error_line=0; //错误行数
 string temp_string; //暂存
 //vector<char> temp_string;
 int turn_num(char c)//字符转为数字
@@ -96,7 +97,12 @@ void state_change(int state_before, int state_now, char temp_char){ //自动机
 				temp_string = "";
 				p++;
 			}
-
+			else if (state_now == 0){
+				token[p].token_name = temp_string;
+				token[p].line = input_line-1;
+				p++;
+				temp_string = "";
+			}
 			else {
 				token[p].token_name = temp_string;
 				token[p].line = input_line;
@@ -197,11 +203,17 @@ int isStr(string str){
 	return false;
 }
 int isNum(string str){
+	int point_count=0;  //小数点个数
 	for (int i = 0; i < str.size(); i++){
 		int temp = (int)str[i];
-		if (temp<48 || temp>57)
-			return false;
+		if (temp < 48 || temp>57){
+			if (str[i]=='.')
+				point_count++;
+			else
+				return false;
+		}	
 	}
+	if (point_count >= 2) return false;
 	return true;
 }
 int check_table(string str) { //判断词法编号
@@ -260,7 +272,7 @@ int check_table(string str) { //判断词法编号
 
 }
 
-void scanf()//输入
+int scanf()//输入
 {
 	FILE *fp = fopen("input.txt", "r");
 	if (fp == NULL)
@@ -292,10 +304,15 @@ void scanf()//输入
 		//cout << token[i].token_name.size() << " ";
 		//if (token[i].token_number != EOF)
 			token[i].token_number = check_table(token[i].token_name);
+			if (token[i].token_number == 404)
+			{
+				error_line = token[i].line;
+				return 2000;
+			}
 	}
 	
 	for (int i = 0; i < p; i++)
 		cout << token[i].token_name << " " << token[i].token_number <<" " <<token[i].line<< endl;
-	
+	return 1;
 }
 
