@@ -56,6 +56,7 @@ void lastW(){
 int if_assign(){
 	nextW();
 	if (now_number == 20) {  //现在是"=",说明是在声明时直接赋值
+		nextW();
 		int result = assignment();
 		if (result >= 1000) return result;
 		else
@@ -65,7 +66,8 @@ int if_assign(){
 		lastW();
 		return 1;
 	}
-	else return 1013; //need ';'
+	else 
+		return 1013; //need ';'
 }
 int declaration_or_assign(){
 	int result = if_assign();
@@ -78,35 +80,40 @@ int variable_declatation(){     //变量声明
 	int result= declaration_or_assign();
 	if (result >= 1000) return result;
 loop_assign:
-	nextW();
+	//nextW();
 	if (now_number == 31){  //, 表示继续赋值
 		nextW();
 		result = declaration_or_assign();
 		if (result >= 1000) return result;
-		nextW();
+		//nextW();
 		if (now_number == 31) goto loop_assign;
+		else if (now_number == 43) return 1;
+		else 
+			return 1013; //need ';'
 	}
 	else if (now_number == 43) return 1;
 	else
 		return 1013;  //need ';'
 }
-int assignment(){
+int assignment(){        //<赋值>
 	if (now_number == 0 || now_number == 3){  //如果是常数或标识符，则为算数表达式
 		int result = arithmetic_expression();
 		if (result >= 1000) return result;
 		//nextW();
-		if (now_number == 43) return 1;
-		else
-			return 1013;
+		//if (now_number == 43) return 1;
+		//else
+			//return 1013;
+		return 1;
 	}
 	else if (now_number == 1){  //如果是字符，则为字符常量
-		nextW();
+		return 1;
+		/*nextW();
 		if (now_number == 43){
 			cout << "赋值语句正确" << endl;
 			return 1;
 		}
 		else
-			return 1013;  //need ';'
+			return 1013;  //need ';'*/
 	}
 	else
 		return 1200;  //表达式右值错误；
@@ -129,10 +136,10 @@ int F(){
 			if (result >= 1000) return result;
 			if (now_number == 38) nextW();
 			else
-				return 1008;//need ')'
+				return 1008;//error1
 		}
 		else
-			return 1009;//need '('
+			return 1009;//error2
 	}
 }
 int T(){
@@ -231,8 +238,6 @@ int code_block(){
 			nextW();
 			int result = variable_declatation();
 			if (result >= 1000)
-				return 1;
-			else
 				return result;
 		}
 		else if (now_number == 0){  //标识符，说明是赋值语句
@@ -242,6 +247,9 @@ int code_block(){
 				nextW();
 				int result = assignment();
 				if (result >= 1000) return result;
+				if (now_number == 43) return 1;
+				else
+					return 1003;  //need ';'
 			}
 			else
 				return 1012;//need '='
@@ -281,14 +289,14 @@ int program(){
 		int result=code_block();
 		if (result > 1000) return result;
 		//nextW();
-		if (now_number == 34) {
+		/*if (now_number == 34) {
 			//cout << "right";
 			return 1;
 		}
 		else
 		{
 			cout << "error here"<<p; return 1006; //need '}'
-		}
+		}*/
 	}
 	else
 	{
