@@ -44,6 +44,7 @@ int branch_program();  //<∑÷≥Ã–Ú>
 //int p;//token÷∏’Î
 int now_number = 0;
 int line = 1;
+
 void nextW(){
 	now_number = token[p].token_number;
 	line = token[p].line;

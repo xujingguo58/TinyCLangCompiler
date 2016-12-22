@@ -14,6 +14,7 @@ struct Token{
 int p = 0;//指针
 int input_line;//行数
 
+char next_char();
 int error_line=0; //错误行数
 string temp_string; //暂存
 //vector<char> temp_string;
@@ -136,7 +137,9 @@ void state_change(int state_before, int state_now, char temp_char){ //自动机
 			case 4:
 			if (state_now == 4){  //注释
 				temp_string = "";
+				while ((c = next_char()) != "\n"){
 
+				}
 			}
 			else {
 			if (temp_string != ""){
@@ -146,7 +149,8 @@ void state_change(int state_before, int state_now, char temp_char){ //自动机
 				p++;
 			}
 			else{
-			temp_string = c;
+				if (c != "\t")
+				temp_string = c;
 			}
 			}
 			break;
@@ -272,12 +276,16 @@ int check_table(string str) { //判断词法编号
 
 }
 
+FILE *fp = fopen("input.txt", "r");
+char next_char(){
+	return fgetc(fp);
+}
 int scanf()//输入
 {
 	for (int i = 1; i < 200; i++){
-		token[i].token_number = 404;
+		token[i].token_number=404;
 	}
-	FILE *fp = fopen("input.txt", "r");
+	
 	if (fp == NULL)
 	{
 		cout << "error!";
@@ -287,9 +295,9 @@ int scanf()//输入
 	int state_before = 0;//上一状态
 
 	char c;
-	//c= fgetc(fp);
+	c = next_char();
 	input_line = 1;
-	while ((c = fgetc(fp)) != EOF) //逐个读取
+	while (c != EOF) //逐个读取
 	{
 		//cout << c;
 		if (c == '\n') {
@@ -300,7 +308,7 @@ int scanf()//输入
 
 		state_change(state_before, state_now, c);  //状态转换
 		state_before = state_now;
-
+		c = next_char();
 	}
 
 	for (int i = 0; i<p; i++){
