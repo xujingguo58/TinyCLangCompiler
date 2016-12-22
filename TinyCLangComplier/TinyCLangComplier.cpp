@@ -40,6 +40,7 @@ int assignment();  //<赋值>
 int char_constant();//<字符常量>
 int declaration_or_assign();//<声明或赋值>
 int if_assign(); //<是否赋值>
+int branch_program();  //<分程序>
 //int p;//token指针
 int now_number = 0;
 int line = 1;
@@ -63,7 +64,7 @@ int if_assign(){
 			return 1;
 	}
 	else if (now_number == 43){  //空，不赋值
-		lastW();
+		//lastW();
 		return 1;
 	}
 	else 
@@ -211,9 +212,12 @@ int condition(){
 	}
 	else
 		cout << now_number;
-		return 1003;
+		return 1003;  //neeed '('
 }
-int else_statement(){
+int else_statement(){  //<else程序>
+	nextW();
+	int result = branch_program();
+	if (result >= 1000) return result;
 	return 1;
 }
 int conditional_statement(){   //条件语句
@@ -223,15 +227,25 @@ int conditional_statement(){   //条件语句
 		//int result=program();
 		if (result >= 1000) return result;
 		nextW();
-		result = program();
+		result = branch_program();
 		if (result >= 1000) return result;
-		result = else_statement();
-		if (result >= 1000) return result;
-			return 1;
+		//nextW();
+		nextW();
+		if (now_number == 10){
+			result = else_statement();
+			if (result >= 1000) return result;
+			else
+				return 1;
+		}
+		lastW();
+		return 1;
 	
 }
 int code_block(){
-	if (now_number == 34) return 1;//说明{}之间没有代码
+	if (now_number == 34) {
+		lastW();
+		return 1;//说明{}之间没有代码
+	}
 	else{
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
 			cout << "声明语句" << endl;
@@ -247,9 +261,12 @@ int code_block(){
 				nextW();
 				int result = assignment();
 				if (result >= 1000) return result;
-				if (now_number == 43) return 1;
-				else
-					return 1003;  //need ';'
+				if (now_number != 43) {
+					//nextW();
+					return 1013; //need ';'
+				}
+				//else
+					//return 1013;  //need ';'
 			}
 			else
 				return 1012;//need '='
@@ -278,9 +295,31 @@ int code_block(){
 		}
 		cout << "一个语句分析结束" << endl;
 		nextW();
+		cout << now_number << endl;
 		code_block();
 	}
 	
+}
+int branch_program(){
+	if (now_number == 33){
+		nextW();
+		if (now_number == 34)  return 1;//现在为{}说明中间没有代码
+		int result = code_block();
+		if (result > 1000) return result;
+		nextW();
+		if (now_number == 34) {
+			//cout << "right";
+			return 1;
+		}
+		else
+		{
+			cout << "error here" << p; return 1006; //need '}'
+		}
+	}
+	else
+	{
+		return 1005; //need '{'
+	}
 }
 int program(){
 	if (now_number == 33){
@@ -288,15 +327,15 @@ int program(){
 		if (now_number == 34)  return 1;//现在为{}说明中间没有代码
 		int result=code_block();
 		if (result > 1000) return result;
-		//nextW();
-		/*if (now_number == 34) {
+		nextW();
+		if (now_number == 34) {
 			//cout << "right";
 			return 1;
 		}
 		else
 		{
 			cout << "error here"<<p; return 1006; //need '}'
-		}*/
+		}
 	}
 	else
 	{

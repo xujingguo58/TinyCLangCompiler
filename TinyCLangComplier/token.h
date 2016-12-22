@@ -274,6 +274,9 @@ int check_table(string str) { //≈–∂œ¥ ∑®±‡∫≈
 
 int scanf()// ‰»Î
 {
+	for (int i = 1; i < 200; i++){
+		token[i].token_number = 404;
+	}
 	FILE *fp = fopen("input.txt", "r");
 	if (fp == NULL)
 	{
