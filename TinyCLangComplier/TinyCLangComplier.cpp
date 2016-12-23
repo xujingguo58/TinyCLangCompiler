@@ -12,7 +12,9 @@ int _tmain(int argc, _TCHAR* argv[])
 
 #include<vector>
 #include"token.h"
-
+#include"syntax.h"
+#include"symbolTable.h"
+#include <sstream>
 
 /*struct Token{
 	string token_name;
@@ -42,10 +44,48 @@ int declaration_or_assign();//<声明或赋值>
 int if_assign(); //<是否赋值>
 int branch_program();  //<分程序>
 //int p;//token指针
+string now_name = "";   //分别是当前token的值、序列号，源程序所在行
 int now_number = 0;
 int line = 1;
 
+int t=0;     //四元式临时变量申请
+string getT(){  //申请临时变量
+	stringstream ss;  //将t转换为字符串 
+	ss << t;
+	ss.str();
+	string s;
+	s = ss.str();
+	string result = "t" + s;
+	return result;
+}
+//四元式函数定义
+string semantic_stack_pop(){  //弹出语义栈顶部元素
+	string top = semantic_stack.top();
+	semantic_stack.pop();
+	return top;
+}
+void send(string op,string arg1,string arg2,string result){   //压栈
+	tempCode temp;
+	temp.op = op;
+	temp.arg1 = arg1;
+	temp.arg2 = arg2;
+	temp.result = result;
+	temp_code.push_back(temp);
+}
+void GEQ(){   //表达式四元式生成函数
+	string op = operator_stack.top();
+	operator_stack.pop();
+	string arg1 = semantic_stack.top();
+	semantic_stack.pop();
+	string arg2 = semantic_stack.top();
+	semantic_stack.pop();
+	string result = getT();
+	semantic_stack.push(result);  //保存结果到语义栈
+	t++;
+	send(op, arg1, arg2, result);
+}
 void nextW(){
+	now_name = token[p].token_name;
 	now_number = token[p].token_number;
 	line = token[p].line;
 	p++;
@@ -101,6 +141,7 @@ int assignment(){        //<赋值>
 	if (now_number == 0 || now_number == 3){  //如果是常数或标识符，则为算数表达式
 		int result = arithmetic_expression();
 		if (result >= 1000) return result;
+		
 		//nextW();
 		//if (now_number == 43) return 1;
 		//else
@@ -108,6 +149,7 @@ int assignment(){        //<赋值>
 		return 1;
 	}
 	else if (now_number == 1){  //如果是字符，则为字符常量
+		//send("=",)
 		return 1;
 		/*nextW();
 		if (now_number == 43){
@@ -129,6 +171,7 @@ int relation_operator(){
 int F(){
 	int result;
 	if (now_number == 3||now_number==0){
+		semantic_stack.push(now_name);  //压入语义栈
 		nextW();
 	}
 	else{
@@ -136,24 +179,31 @@ int F(){
 			nextW();
 			result=E();
 			if (result >= 1000) return result;
-			if (now_number == 38) nextW();
+			if (now_number == 38) {
+				nextW();
+				return 1;
+			}
 			else
 				return 1008;//error1
 		}
 		else
 			return 1009;//error2
 	}
+	
 }
 int T(){
 	int result =F();
 	if (result >= 1000) return result;
 	loop_F: 
 	if (now_number==28||now_number==29){
+		operator_stack.push(now_name);  //操作符入操作符栈
 		nextW();
-		result=F();
+		result=F();	
 		if (result >= 1000) return result;
+		GEQ();    //生成算数表达式四元式
 		goto loop_F;
 	}
+	return 1;
 }
 int E(){
 	int result;
@@ -161,11 +211,14 @@ int E(){
 	if (result >= 1000) return result;
 	loop_T:
 	if (now_number == 26 || now_number == 27){
+		operator_stack.push(now_name);  //操作符入操作符栈
 		nextW();
 		result=T();
+		GEQ();    //生成算数表达式四元式
 		if (result >= 1000) return result;
 		goto loop_T;
 	}
+	return 1;
 }
 int arithmetic_expression(){
 	int result = E();
@@ -249,6 +302,7 @@ int code_block(){
 	}
 	else{
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
+			//semantic_stack.push(now_name);
 			cout << "声明语句" << endl;
 			nextW();
 			int result = variable_declatation();
@@ -256,17 +310,24 @@ int code_block(){
 				return result;
 		}
 		else if (now_number == 0){  //标识符，说明是赋值语句
+			semantic_stack.push(now_name);
 			cout << "赋值语句";
 			nextW();
 			if (now_number == 20){
 				nextW();
 				int result = assignment();
 				if (result >= 1000) return result;
+				string str1 = semantic_stack_pop();
+				cout << str1 << endl;
+				string str2 = semantic_stack_pop();
+				cout << str2 << endl;
+				send("=", str1, "_", str2);
 				if (now_number != 43) {
 					//nextW();
 					return 1013; //need ';'
 				}
 				//else
+					//return 1;
 					//return 1013;  //need ';'
 			}
 			else
@@ -346,7 +407,8 @@ int program(){
 int main_function(){
 	if (now_number == 4){
 		nextW();
-		if (now_number == 07){
+		if (now_number == 07){  //是main，将main生成四元式
+			send("main", "_", "_", "_");
 			nextW();
 			if (now_number == 37){
 				nextW();
@@ -403,34 +465,41 @@ int entrance(){
 int  main(){
 
 	int result;
-	result=scanf();
+	result = scanf();
 	if (result >= 2000)
 	{
 		cout << "error2200:line " << error_line << " 未能识别的字符";
 		return 0;
 	}
 
+	createSymbolTable();
 	p = 0;
 	line = 1;
 	result = entrance();
 	switch (result){
-		case 1:cout << "compiler success"; break;
-		case 1000: cout << "error1000:line " << line << " 头文件格式错误"; break;
-		case 1001: cout << "error1001:line " << line << " main 需要类型"; break;
-		case 1002: cout << "error1002:line " << line << " need 'main'"; break;
-		case 1003: cout << "error1003:line " << line << " need '('"; break;
-		case 1004: cout << "error1004:line " << line << " need ')'"; break;
-		case 1005: cout << "error1005:line " << line << " need '{'"; break;
-		case 1006: cout << "error1006:line " << line << " need '}'"; break;
-		case 1007: cout << "error1007:line " << line << " need operator"; break;
-		case 1008: cout << "error1008:line " << line << " 算数表达式错误1"; break;
-		case 1009: cout << "error1009:line " << line << " 算数表达式错误2"; break;
-		case 1010: cout << "error1010:line " << line << " 左值类型错误"; break;
-		case 1011: cout << "error1011:line " << line << " 右值类型错误"; break;
-		case 1012: cout << "error1012:line " << line << " need '='"; break;
-		case 1013: cout << "error1013:line " << line << " need ';'"; break;
-		case 1200: cout << "error1200:line " << line << " 表达式右值错误"; break;
-		case 1100: cout << "error1100:line " << line << " 未识别语句"; break;
-		default: cout << result << endl;
+	case 1:cout << "compiler success"; break;
+	case 1000: cout << "error1000:line " << line << " 头文件格式错误"; break;
+	case 1001: cout << "error1001:line " << line << " main 需要类型"; break;
+	case 1002: cout << "error1002:line " << line << " need 'main'"; break;
+	case 1003: cout << "error1003:line " << line << " need '('"; break;
+	case 1004: cout << "error1004:line " << line << " need ')'"; break;
+	case 1005: cout << "error1005:line " << line << " need '{'"; break;
+	case 1006: cout << "error1006:line " << line << " need '}'"; break;
+	case 1007: cout << "error1007:line " << line << " need operator"; break;
+	case 1008: cout << "error1008:line " << line << " 算数表达式错误1"; break;
+	case 1009: cout << "error1009:line " << line << " 算数表达式错误2"; break;
+	case 1010: cout << "error1010:line " << line << " 左值类型错误"; break;
+	case 1011: cout << "error1011:line " << line << " 右值类型错误"; break;
+	case 1012: cout << "error1012:line " << line << " need '='"; break;
+	case 1013: cout << "error1013:line " << line << " need ';'"; break;
+	case 1200: cout << "error1200:line " << line << " 表达式右值错误"; break;
+	case 1100: cout << "error1100:line " << line << " 未识别语句"; break;
+	default: cout << "未定义错误" << endl;
 	}
+	cout << "四元式" << endl;
+	for (tempCode t : temp_code){
+		cout << t.op << " " << t.arg1 << " " << t.arg2 << " " << t.result << endl;
+	}
+	//cout << temp_code.top().op << " " << temp_code.top().arg1 << " " << temp_code.top().arg2 << " " << temp_code.top().result << endl;
+	//cout << semantic_stack.top();
 }
