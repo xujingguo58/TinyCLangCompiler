@@ -56,6 +56,7 @@ string getT(){  //申请临时变量
 	string s;
 	s = ss.str();
 	string result = "t" + s;
+	t++;
 	return result;
 }
 //四元式函数定义
@@ -71,17 +72,17 @@ void send(string op,string arg1,string arg2,string result){   //压栈
 	temp.arg2 = arg2;
 	temp.result = result;
 	temp_code.push_back(temp);
+	//semantic_stack.push();
 }
 void GEQ(){   //表达式四元式生成函数
 	string op = operator_stack.top();
 	operator_stack.pop();
-	string arg1 = semantic_stack.top();
-	semantic_stack.pop();
 	string arg2 = semantic_stack.top();
+	semantic_stack.pop();
+	string arg1 = semantic_stack.top();
 	semantic_stack.pop();
 	string result = getT();
 	semantic_stack.push(result);  //保存结果到语义栈
-	t++;
 	send(op, arg1, arg2, result);
 }
 void nextW(){
@@ -101,8 +102,12 @@ int if_assign(){
 		nextW();
 		int result = assignment();
 		if (result >= 1000) return result;
-		else
+		else{
+			string arg1 = semantic_stack_pop();
+			string semantic_result = semantic_stack_pop();
+			send("=", arg1, "_", semantic_result);
 			return 1;
+		}
 	}
 	else if (now_number == 43){  //空，不赋值
 		//lastW();
@@ -142,22 +147,11 @@ int assignment(){        //<赋值>
 		int result = arithmetic_expression();
 		if (result >= 1000) return result;
 		
-		//nextW();
-		//if (now_number == 43) return 1;
-		//else
-			//return 1013;
 		return 1;
 	}
 	else if (now_number == 1){  //如果是字符，则为字符常量
 		//send("=",)
 		return 1;
-		/*nextW();
-		if (now_number == 43){
-			cout << "赋值语句正确" << endl;
-			return 1;
-		}
-		else
-			return 1013;  //need ';'*/
 	}
 	else
 		return 1200;  //表达式右值错误；
@@ -244,13 +238,25 @@ int condition(){
 		//int result=logic_expression();
 		//if (result >= 1000) return result;
 		if (now_number == 3 || now_number == 0){
+			semantic_stack.push(now_name);
 			nextW();
 			int result = relation_operator();
 			if (result >= 1000) return result;
+			operator_stack.push(now_name);
 			nextW();
 			if (now_number == 3 || now_number == 0) {
+				semantic_stack.push(now_name);
 				nextW();
-				if (now_number == 38) return 1;
+				if (now_number == 38){
+					//string op = operator_stack.top();
+					//operator_stack.pop();
+					//string result = getT();
+					GEQ();
+					send("if", semantic_stack_pop(), "_", "_");
+					//send(op, semantic_stack_pop(), semantic_stack_pop(), getT());
+					//send("if", semantic_stack_pop(), "_", "_");
+					return 1;
+				}
 				else
 					return 1004;//need ')'
 			}
@@ -286,10 +292,13 @@ int conditional_statement(){   //条件语句
 		//nextW();
 		nextW();
 		if (now_number == 10){
+			send("ie", "_", "_", "_");  //else
 			result = else_statement();
 			if (result >= 1000) return result;
-			else
+			else{
+				send("el", "_", "_", "_");
 				return 1;
+			}
 		}
 		lastW();
 		return 1;
@@ -302,9 +311,9 @@ int code_block(){
 	}
 	else{
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
-			//semantic_stack.push(now_name);
 			cout << "声明语句" << endl;
 			nextW();
+			semantic_stack.push(now_name);
 			int result = variable_declatation();
 			if (result >= 1000)
 				return result;
@@ -317,27 +326,25 @@ int code_block(){
 				nextW();
 				int result = assignment();
 				if (result >= 1000) return result;
-				string str1 = semantic_stack_pop();
-				cout << str1 << endl;
-				string str2 = semantic_stack_pop();
-				cout << str2 << endl;
-				send("=", str1, "_", str2);
+				string arg1 = semantic_stack_pop();
+				string semantic_result = semantic_stack_pop();
+				send("=", arg1, "_", semantic_result);
 				if (now_number != 43) {
 					//nextW();
 					return 1013; //need ';'
 				}
-				//else
-					//return 1;
-					//return 1013;  //need ';'
 			}
 			else
 				return 1012;//need '='
 		}
 		else if (now_number == 9){  //if 说明是if语句
 			cout << "if语句" << endl;
+			//semantic_stack.push(now_name);
 			nextW();
 			int result=conditional_statement();
 			if (result > 1000) return result;
+			send("ie", "_","_","_");
+			//send("if", semantic_stack_pop(), "_", "_");
 		}
 		else if (now_number == 12){  //while 循环语句
 			cout << "while语句" << endl;
