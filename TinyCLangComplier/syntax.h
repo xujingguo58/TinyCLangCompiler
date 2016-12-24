@@ -16,7 +16,7 @@ stack<string> semantic_stack;   //语义栈
 
 stack<string> operator_stack;  //运算符栈
 
-
+stack<int> type_stack;    //类型栈 保存变量类型
 int t = 0;     //四元式临时变量申请
 string getT(){  //申请临时变量
 	stringstream ss;  //将t转换为字符串 

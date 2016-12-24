@@ -64,12 +64,13 @@ void lastW(){
 int if_assign(){
 	semantic_stack.push(now_name);
 	//首先判断是否存在定义，若存在，还要再判断是否是同一个类型，如果没错误，添加标识符表
-	if (checkIdentifierTable(now_name, now_number) == 1){    //说明重定义
+	if (checkIdentifierTable(now_name, type_stack.top()) == 1){    //说明重定义
 		return 3001;
 	}
 
 	else {  //若标识符表没有，则添加到标识符表中
-		addIdentifierTable(now_name, now_number);
+		
+		addIdentifierTable(now_name, type_stack.top());
 	}
 	nextW();
 	if (now_number == 20) {  //现在是"=",说明是在声明时直接赋值
@@ -81,8 +82,6 @@ int if_assign(){
 	
 	}
 	else if (now_number == 43||now_number==31){  //空，不赋值
-		//lastW();
-		//semantic_stack.pop();
 		return 1;
 	}
 	else 
@@ -294,11 +293,13 @@ int code_block(){
 	else{
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
 			cout << "声明语句" << endl;
+			type_stack.push(now_number);
 			nextW();
 			//semantic_stack.push(now_name);
 			int result = variable_declatation();
 			if (result >= 1000)
 				return result;
+			type_stack.pop();
 		}
 		else if (now_number == 0){  //标识符，说明是赋值语句
 			//判断标识符是否的定义
@@ -336,7 +337,16 @@ int code_block(){
 			send("ew", "_", "_", "_");
 		}
 		else if (now_number == 19){  //return 
-
+			nextW();
+			if (now_name == "1" || now_name == "0"){
+				nextW();
+				if (now_number == 43){
+					//nextW();
+					return 1;
+				}
+				else
+					return 1013;//need ';'
+			}
 		}
 		else{   //未识别语句
 			cout << "1100";
@@ -402,6 +412,8 @@ int main_function(){
 				if (now_number == 38){
 					nextW();
 					program();
+					int result = checkTempCode();   //检查中间代码
+					if (result > 1000) return result;
 				}
 				else
 					return 1004;//need ')'
@@ -483,6 +495,7 @@ int  main(){
 	case 1100: cout << "error1100:line " << line << " 未识别语句"; break;
 	case 3001: cout << "error3001:line " << line << " 标识符重定义"; break;
 	case 3002: cout << "error3002:line " << line << " 标识符未定义"; break;
+	case 3003: cout << "error3003:line " << line << " 表达式右侧两个操作数类型不匹配"; break;
 	default: cout << "未定义错误" << endl;
 	}
 	createSymbolTable();
