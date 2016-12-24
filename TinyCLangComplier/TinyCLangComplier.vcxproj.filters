@@ -39,6 +39,9 @@
     <ClInclude Include="symbolTable.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="objectCode.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

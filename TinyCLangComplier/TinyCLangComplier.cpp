@@ -14,7 +14,7 @@ int _tmain(int argc, _TCHAR* argv[])
 #include"token.h"
 #include"syntax.h"
 #include"symbolTable.h"
-#include <sstream>
+#include"objectCode.h"
 
 /*struct Token{
 	string token_name;
@@ -29,6 +29,7 @@ int arithmetic_expression();//算数表达式
 int logic_expression();  //<逻辑表达式>
 int condition();  //<条件>
 int conditional_statement();  //条件语句
+int loop_statement();    //循环(while)语句
 int variable_declatation(); //<变量声明语句>
 int code_block();
 int program();
@@ -48,43 +49,7 @@ string now_name = "";   //分别是当前token的值、序列号，源程序所在行
 int now_number = 0;
 int line = 1;
 
-int t=0;     //四元式临时变量申请
-string getT(){  //申请临时变量
-	stringstream ss;  //将t转换为字符串 
-	ss << t;
-	ss.str();
-	string s;
-	s = ss.str();
-	string result = "t" + s;
-	t++;
-	return result;
-}
-//四元式函数定义
-string semantic_stack_pop(){  //弹出语义栈顶部元素
-	string top = semantic_stack.top();
-	semantic_stack.pop();
-	return top;
-}
-void send(string op,string arg1,string arg2,string result){   //压栈
-	tempCode temp;
-	temp.op = op;
-	temp.arg1 = arg1;
-	temp.arg2 = arg2;
-	temp.result = result;
-	temp_code.push_back(temp);
-	//semantic_stack.push();
-}
-void GEQ(){   //表达式四元式生成函数
-	string op = operator_stack.top();
-	operator_stack.pop();
-	string arg2 = semantic_stack.top();
-	semantic_stack.pop();
-	string arg1 = semantic_stack.top();
-	semantic_stack.pop();
-	string result = getT();
-	semantic_stack.push(result);  //保存结果到语义栈
-	send(op, arg1, arg2, result);
-}
+
 void nextW(){
 	now_name = token[p].token_name;
 	now_number = token[p].token_number;
@@ -97,20 +62,27 @@ void lastW(){
 	line = token[p].line;
 }
 int if_assign(){
+	semantic_stack.push(now_name);
+	//首先判断是否存在定义，若存在，还要再判断是否是同一个类型，如果没错误，添加标识符表
+	if (checkIdentifierTable(now_name, now_number) == 1){    //说明重定义
+		return 3001;
+	}
+
+	else {  //若标识符表没有，则添加到标识符表中
+		addIdentifierTable(now_name, now_number);
+	}
 	nextW();
 	if (now_number == 20) {  //现在是"=",说明是在声明时直接赋值
+		
 		nextW();
 		int result = assignment();
 		if (result >= 1000) return result;
-		else{
-			string arg1 = semantic_stack_pop();
-			string semantic_result = semantic_stack_pop();
-			send("=", arg1, "_", semantic_result);
-			return 1;
-		}
+		return 1;
+	
 	}
-	else if (now_number == 43){  //空，不赋值
+	else if (now_number == 43||now_number==31){  //空，不赋值
 		//lastW();
+		//semantic_stack.pop();
 		return 1;
 	}
 	else 
@@ -146,11 +118,16 @@ int assignment(){        //<赋值>
 	if (now_number == 0 || now_number == 3){  //如果是常数或标识符，则为算数表达式
 		int result = arithmetic_expression();
 		if (result >= 1000) return result;
-		
+		string arg1 = semantic_stack_pop();
+		string semantic_result = semantic_stack_pop();
+		send("=", arg1, "_", semantic_result);
 		return 1;
 	}
 	else if (now_number == 1){  //如果是字符，则为字符常量
-		//send("=",)
+		send("=", now_name, "_", semantic_stack_pop());
+		
+		nextW();
+
 		return 1;
 	}
 	else
@@ -248,13 +225,7 @@ int condition(){
 				semantic_stack.push(now_name);
 				nextW();
 				if (now_number == 38){
-					//string op = operator_stack.top();
-					//operator_stack.pop();
-					//string result = getT();
 					GEQ();
-					send("if", semantic_stack_pop(), "_", "_");
-					//send(op, semantic_stack_pop(), semantic_stack_pop(), getT());
-					//send("if", semantic_stack_pop(), "_", "_");
 					return 1;
 				}
 				else
@@ -286,6 +257,7 @@ int conditional_statement(){   //条件语句
 		int result = condition();
 		//int result=program();
 		if (result >= 1000) return result;
+		send("if", semantic_stack_pop(), "_", "_");
 		nextW();
 		result = branch_program();
 		if (result >= 1000) return result;
@@ -304,6 +276,16 @@ int conditional_statement(){   //条件语句
 		return 1;
 	
 }
+int loop_statement(){   //循环(while)语句
+	int result = condition();
+	//int result=program();
+	if (result >= 1000) return result;
+	send("while", semantic_stack_pop(), "_", "_");
+	nextW();
+	result = branch_program();
+	if (result >= 1000) return result;
+	return 1;
+}
 int code_block(){
 	if (now_number == 34) {
 		lastW();
@@ -313,12 +295,17 @@ int code_block(){
 		if (now_number == 4 || now_number == 5 || now_number == 6){  //是类型，说明是变量声明语句
 			cout << "声明语句" << endl;
 			nextW();
-			semantic_stack.push(now_name);
+			//semantic_stack.push(now_name);
 			int result = variable_declatation();
 			if (result >= 1000)
 				return result;
 		}
 		else if (now_number == 0){  //标识符，说明是赋值语句
+			//判断标识符是否的定义
+			if (checkIdentifierTable(now_name,now_number) == 0){  //说明未定义 
+				
+				return 3002;
+			}
 			semantic_stack.push(now_name);
 			cout << "赋值语句";
 			nextW();
@@ -326,9 +313,6 @@ int code_block(){
 				nextW();
 				int result = assignment();
 				if (result >= 1000) return result;
-				string arg1 = semantic_stack_pop();
-				string semantic_result = semantic_stack_pop();
-				send("=", arg1, "_", semantic_result);
 				if (now_number != 43) {
 					//nextW();
 					return 1013; //need ';'
@@ -339,21 +323,17 @@ int code_block(){
 		}
 		else if (now_number == 9){  //if 说明是if语句
 			cout << "if语句" << endl;
-			//semantic_stack.push(now_name);
 			nextW();
 			int result=conditional_statement();
 			if (result > 1000) return result;
 			send("ie", "_","_","_");
-			//send("if", semantic_stack_pop(), "_", "_");
 		}
 		else if (now_number == 12){  //while 循环语句
 			cout << "while语句" << endl;
 			nextW();
-			int result = condition();
+			int result = loop_statement();
 			if (result >= 1000) return result;
-			nextW();
-			result = program();
-			if (result >= 1000) return result;
+			send("ew", "_", "_", "_");
 		}
 		else if (now_number == 19){  //return 
 
@@ -364,7 +344,7 @@ int code_block(){
 		}
 		cout << "一个语句分析结束" << endl;
 		nextW();
-		cout << now_number << endl;
+		//cout << now_number << endl;
 		code_block();
 	}
 	
@@ -479,12 +459,12 @@ int  main(){
 		return 0;
 	}
 
-	createSymbolTable();
+	
 	p = 0;
 	line = 1;
 	result = entrance();
 	switch (result){
-	case 1:cout << "compiler success"; break;
+	case 1:cout << "compiler success"<<endl; break;
 	case 1000: cout << "error1000:line " << line << " 头文件格式错误"; break;
 	case 1001: cout << "error1001:line " << line << " main 需要类型"; break;
 	case 1002: cout << "error1002:line " << line << " need 'main'"; break;
@@ -501,12 +481,16 @@ int  main(){
 	case 1013: cout << "error1013:line " << line << " need ';'"; break;
 	case 1200: cout << "error1200:line " << line << " 表达式右值错误"; break;
 	case 1100: cout << "error1100:line " << line << " 未识别语句"; break;
+	case 3001: cout << "error3001:line " << line << " 标识符重定义"; break;
+	case 3002: cout << "error3002:line " << line << " 标识符未定义"; break;
 	default: cout << "未定义错误" << endl;
 	}
+	createSymbolTable();
 	cout << "四元式" << endl;
 	for (tempCode t : temp_code){
 		cout << t.op << " " << t.arg1 << " " << t.arg2 << " " << t.result << endl;
 	}
-	//cout << temp_code.top().op << " " << temp_code.top().arg1 << " " << temp_code.top().arg2 << " " << temp_code.top().result << endl;
-	//cout << semantic_stack.top();
+
+	createObjectCode();
+
 }
